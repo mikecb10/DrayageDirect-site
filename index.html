@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DrayageDirect — Dispatch drayage. Without the spreadsheet.</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font-sans);color:var(--fg-strong);background:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.5) blur(8px);border-bottom:1px solid transparent;transition:border-color .2s}
+  .nav.scrolled{border-color:var(--border)}
+  .nav-inner{display:flex;align-items:center;gap:28px;height:72px}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:700}
+  .brand-d{font-size:34px;color:var(--dd-blue);font-weight:700;line-height:1}
+  .brand-wm{display:flex;flex-direction:column;line-height:1.05;font-size:15px;color:var(--fg-strong);font-weight:700}
+  .nav-links{display:flex;gap:26px;margin-left:8px}
+  .nav-links a{font-size:14px;font-weight:500;color:var(--fg-strong);opacity:.82;transition:opacity .15s}
+  .nav-links a:hover{opacity:1}
+  .nav-cta{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
+  .btn.primary{background:var(--dd-blue);color:#fff}
+  .btn.primary:hover{background:var(--dd-blue-700)}
+  .btn.ghost{background:transparent;color:var(--fg-strong)}
+  .btn.ghost:hover{background:var(--bg-soft)}
+  .btn.outline{background:#fff;color:var(--fg-strong);border-color:var(--border-strong)}
+  .btn.outline:hover{background:var(--bg-soft)}
+  .btn.lg{padding:13px 22px;font-size:15px}
+  .btn svg{width:16px;height:16px;stroke-width:1.75}
+
+  /* HERO */
+  .hero{position:relative;padding:88px 0 56px;overflow:hidden}
+  .hero::before{content:"";position:absolute;top:-200px;right:-200px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.08),transparent 70%);pointer-events:none}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--dd-blue-600);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;border-radius:9999px;background:var(--dd-blue-50);border:1px solid #dbeafe}
+  .hero h1{font-size:clamp(2.75rem,6vw,4.5rem);font-weight:700;letter-spacing:-.02em;line-height:1.05;margin:22px 0 18px;max-width:940px}
+  .hero h1 em{font-style:normal;color:var(--dd-blue)}
+  .hero .lead{font-size:19px;line-height:1.5;color:var(--fg-muted);max-width:640px;margin-bottom:32px}
+  .hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+  .hero-meta{display:flex;gap:24px;font-size:13px;color:var(--fg-muted);flex-wrap:wrap}
+  .hero-meta span{display:inline-flex;gap:6px;align-items:center}
+  .hero-meta svg{width:14px;height:14px;stroke-width:1.75;color:#059669}
+
+  /* PRODUCT PREVIEW (dispatcher board mock) */
+  .preview{margin:54px 0 0;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 60px rgba(15,23,42,.12), 0 6px 14px rgba(15,23,42,.05);background:#0f172a}
+  .preview-top{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0b1220;border-bottom:1px solid #1e293b}
+  .preview-top .dot{width:10px;height:10px;border-radius:50%;background:#ef4444;opacity:.7}
+  .preview-top .dot.y{background:#f59e0b}
+  .preview-top .dot.g{background:#22c55e}
+  .preview-top .tab{margin-left:auto;color:#94a3b8;font-size:12px;font-family:var(--font-mono)}
+  .preview-body{display:grid;grid-template-columns:220px 1fr;background:#0f172a;min-height:380px}
+  .sb{padding:16px 10px;border-right:1px solid #1e293b}
+  .sb-brand{display:flex;gap:8px;align-items:center;padding:4px 8px 16px;border-bottom:1px solid #1e293b;margin-bottom:12px}
+  .sb-brand .d{color:var(--dd-blue-400);font-size:22px;font-weight:700;line-height:1}
+  .sb-brand .w{color:#f1f5f9;font-size:13px;font-weight:600;line-height:1.1}
+  .sb-brand .w small{display:block;color:#94a3b8;font-weight:400;font-size:11px}
+  .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#cbd5e1;font-size:13px;font-weight:500;cursor:pointer}
+  .sb-item svg{width:16px;height:16px;stroke-width:1.75}
+  .sb-item.active{background:var(--dd-blue);color:#fff}
+  .sb-item:not(.active):hover{background:#1e293b;color:#fff}
+  .board{padding:18px}
+  .kpis{display:flex;gap:10px;margin-bottom:16px;overflow-x:auto}
+  .kpi{flex:0 0 auto;padding:10px 14px;background:#0b1220;border:1px solid #1e293b;border-radius:10px;min-width:150px}
+  .kpi .lbl{color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .kpi .num{color:#f1f5f9;font-size:20px;font-weight:700;margin-top:2px}
+  .kpi.active{border-color:var(--dd-blue);box-shadow:0 0 0 2px rgba(37,99,235,.3)}
+  .kpi.active .num{color:#60a5fa}
+  .tbl{border:1px solid #1e293b;border-radius:10px;overflow:hidden;background:#0b1220}
+  .tbl-h{display:grid;grid-template-columns:80px 1fr 100px 120px 110px 100px;padding:10px 14px;background:#1e293b;color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .tbl-r{display:grid;grid-template-columns:80px 1fr 100px 120px 110px 100px;padding:12px 14px;border-top:1px solid #1e293b;color:#cbd5e1;font-size:13px;align-items:center}
+  .tbl-r .mono{font-family:var(--font-mono);color:#f1f5f9}
+  .stripe{width:3px;height:24px;border-radius:2px;margin-right:10px;display:inline-block;vertical-align:middle}
+  .b{display:inline-flex;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:500}
+  .b.dispatched{background:rgba(37,99,235,.15);color:#93c5fd}
+  .b.transit{background:rgba(217,119,6,.15);color:#fcd34d}
+  .b.delivered{background:rgba(5,150,105,.15);color:#6ee7b7}
+  .b.avail{background:rgba(2,132,199,.15);color:#7dd3fc}
+  .b.pending{background:rgba(148,163,184,.15);color:#cbd5e1}
+
+  /* LOGOS BAR */
+  .trust{padding:36px 0 0;border-top:1px solid var(--border);margin-top:84px}
+  .trust-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-muted);font-weight:600;text-align:center;margin-bottom:20px}
+  .logos{display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;opacity:.6}
+  .logos span{font-weight:700;font-size:18px;color:var(--fg-muted);letter-spacing:-.01em;white-space:nowrap}
+
+  /* FEATURES */
+  section{padding:88px 0}
+  .sec-head{max-width:720px;margin:0 auto 48px;text-align:center}
+  .sec-head .eb{color:var(--dd-blue);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:block}
+  .sec-head h2{font-size:clamp(2rem,4vw,2.75rem);font-weight:700;letter-spacing:-.015em;line-height:1.15;margin:0 0 14px}
+  .sec-head p{font-size:18px;color:var(--fg-muted);line-height:1.5;margin:0}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .feat{padding:28px;border:1px solid var(--border);border-radius:12px;background:#fff;transition:border-color .2s,box-shadow .2s}
+  .feat:hover{border-color:var(--border-strong);box-shadow:var(--shadow-sm)}
+  .feat .ic{width:38px;height:38px;border-radius:8px;background:var(--dd-blue-50);color:var(--dd-blue-600);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .feat .ic svg{width:20px;height:20px;stroke-width:1.75}
+  .feat h3{font-size:18px;font-weight:600;margin:0 0 8px;color:var(--fg-strong)}
+  .feat p{font-size:14px;line-height:1.55;color:var(--fg-muted);margin:0}
+
+  /* BIG PITCH */
+  .pitch{background:var(--bg-soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .pitch-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+  .pitch .eb{color:var(--dd-blue);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:block}
+  .pitch h2{font-size:36px;font-weight:700;letter-spacing:-.015em;line-height:1.15;margin:0 0 18px}
+  .pitch p{font-size:17px;color:var(--fg-muted);line-height:1.6;margin:0 0 16px}
+  .pitch ul{list-style:none;padding:0;margin:24px 0 0}
+  .pitch li{display:flex;gap:12px;padding:10px 0;font-size:15px;align-items:flex-start}
+  .pitch li svg{width:18px;height:18px;stroke-width:2;color:#059669;flex-shrink:0;margin-top:2px}
+  .pitch-vis{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:var(--shadow-sm)}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-lite{padding:14px;border:1px solid var(--border);border-radius:10px}
+  .kpi-lite .l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-muted);font-weight:600}
+  .kpi-lite .n{font-size:24px;font-weight:700;color:var(--fg-strong);margin-top:4px}
+  .kpi-lite.b .n{color:var(--dd-blue)}
+  .kpi-lite.a .n{color:#b45309}
+  .kpi-lite.g .n{color:#059669}
+  .kpi-lite.p .n{color:#7c3aed}
+
+  /* STATES ROW */
+  .states{padding:64px 0}
+  .states h3{font-size:14px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:var(--fg-muted);margin:0 0 16px;text-align:center}
+  .states-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:860px;margin:0 auto}
+  .state-chip{padding:6px 14px;border-radius:9999px;font-size:13px;font-weight:500;border:1px solid}
+  .s-pending{background:#f9fafb;color:#374151;border-color:#e5e7eb}
+  .s-available{background:#f0f9ff;color:#0369a1;border-color:#bae6fd}
+  .s-dispatched{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+  .s-transit{background:#fffbeb;color:#92400e;border-color:#fde68a}
+  .s-dropped{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+  .s-delivered{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+  .s-completed{background:#d1fae5;color:#065f46;border-color:#86efac}
+  .s-cancelled{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+
+  /* PRICING */
+  .pr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .pr{padding:32px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;flex-direction:column}
+  .pr.hl{border-color:var(--dd-blue);position:relative;box-shadow:0 0 0 4px rgba(37,99,235,.08)}
+  .pr .tag{position:absolute;top:-11px;right:20px;background:var(--dd-blue);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:9999px;letter-spacing:.04em;text-transform:uppercase}
+  .pr h3{font-size:14px;font-weight:600;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.06em;margin:0}
+  .pr .price{font-size:48px;font-weight:700;letter-spacing:-.02em;margin:18px 0 2px;color:var(--fg-strong)}
+  .pr .price small{font-size:16px;color:var(--fg-muted);font-weight:500}
+  .pr .sub{font-size:14px;color:var(--fg-muted);margin-bottom:22px}
+  .pr ul{list-style:none;padding:0;margin:0 0 24px;flex:1}
+  .pr li{padding:7px 0;font-size:14px;color:var(--fg-strong);display:flex;gap:8px;align-items:flex-start}
+  .pr li svg{width:16px;height:16px;stroke-width:2;color:#059669;flex-shrink:0;margin-top:3px}
+  .pr .btn{width:100%}
+
+  /* FAQ */
+  .faq{max-width:820px;margin:0 auto}
+  .qa{border-bottom:1px solid var(--border);padding:22px 0}
+  .qa summary{font-size:17px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--fg-strong)}
+  .qa summary::-webkit-details-marker{display:none}
+  .qa summary::after{content:"+";color:var(--fg-muted);font-size:22px;font-weight:400;transition:transform .2s}
+  .qa[open] summary::after{transform:rotate(45deg)}
+  .qa p{margin:12px 0 0;color:var(--fg-muted);font-size:15px;line-height:1.6}
+
+  /* CTA */
+  .cta-band{background:var(--dd-ink);color:#fff;border-radius:16px;padding:56px 48px;text-align:center;margin:60px 0;position:relative;overflow:hidden}
+  .cta-band::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 0%,rgba(37,99,235,.25),transparent 60%);pointer-events:none}
+  .cta-band h2{font-size:36px;font-weight:700;letter-spacing:-.015em;margin:0 0 14px;position:relative}
+  .cta-band p{font-size:17px;color:#cbd5e1;margin:0 0 28px;max-width:540px;margin-left:auto;margin-right:auto;position:relative}
+  .cta-band .btns{display:flex;gap:12px;justify-content:center;position:relative}
+  .cta-band .btn.outline{background:transparent;color:#fff;border-color:#334155}
+  .cta-band .btn.outline:hover{background:#1e293b}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--border);padding:52px 0 36px;background:#fff}
+  .ft{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+  .ft-col h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:var(--fg-strong);margin:0 0 14px}
+  .ft-col a{display:block;font-size:14px;color:var(--fg-muted);padding:5px 0;transition:color .15s}
+  .ft-col a:hover{color:var(--fg-strong)}
+  .ft-col p{font-size:14px;color:var(--fg-muted);line-height:1.6;margin:14px 0 0;max-width:280px}
+  .ft-bottom{display:flex;justify-content:space-between;margin-top:44px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--fg-muted)}
+
+  @media(max-width:900px){
+    .nav-links{display:none}
+    .feat-grid,.pr-grid{grid-template-columns:1fr}
+    .pitch-grid{grid-template-columns:1fr;gap:32px}
+    .ft{grid-template-columns:1fr 1fr}
+    .preview-body{grid-template-columns:1fr}
+    .sb{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#">
+      <span class="brand-d">D</span>
+      <span class="brand-wm"><span>Drayage</span><span>Direct</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#product">Product</a>
+      <a href="#features">Features</a>
+      <a href="#billing">Billing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn ghost" href="login.html">Sign in</a>
+      <a class="btn primary" href="#cta">Book a demo <i data-lucide="arrow-right"></i></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><i data-lucide="zap" style="width:12px;height:12px;stroke-width:2"></i> TMS for drayage carriers</span>
+    <h1>Dispatch drayage.<br>Without the <em>spreadsheet</em>.</h1>
+    <p class="lead">One board for every load — pickup, delivery, return. Realtime across your team. Rail slips for drivers. Invoices out the same day.</p>
+    <div class="hero-ctas">
+      <a class="btn primary lg" href="#cta">Book a demo <i data-lucide="arrow-right"></i></a>
+      <a class="btn outline lg" href="login.html">Sign in to your yard <i data-lucide="log-in"></i></a>
+    </div>
+    <div class="hero-meta">
+      <span><i data-lucide="check"></i> Realtime dispatch board</span>
+      <span><i data-lucide="check"></i> AR, AP, per-diem, tariffs</span>
+      <span><i data-lucide="check"></i> Multi-tenant, white-label ready</span>
+    </div>
+
+    <!-- Product preview -->
+    <div class="preview" id="product">
+      <div class="preview-top">
+        <span class="dot"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="tab">drayagedirect.io/dispatcher</span>
+      </div>
+      <div class="preview-body">
+        <aside class="sb">
+          <div class="sb-brand">
+            <span class="d">D</span>
+            <div class="w">DrayageDirect<small>Carrier Portal</small></div>
+          </div>
+          <div class="sb-item"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+          <div class="sb-item active"><i data-lucide="truck"></i> Dispatcher</div>
+          <div class="sb-item"><i data-lucide="package"></i> Loads</div>
+          <div class="sb-item"><i data-lucide="users"></i> Drivers</div>
+          <div class="sb-item"><i data-lucide="file-text"></i> AR / Invoices</div>
+          <div class="sb-item"><i data-lucide="dollar-sign"></i> AP / Settlements</div>
+          <div class="sb-item"><i data-lucide="building-2"></i> Organizations</div>
+          <div class="sb-item"><i data-lucide="settings"></i> Settings</div>
+        </aside>
+        <div class="board">
+          <div class="kpis">
+            <div class="kpi"><div class="lbl">Arriving</div><div class="num">12</div></div>
+            <div class="kpi active"><div class="lbl">Need Pickup</div><div class="num">42</div></div>
+            <div class="kpi"><div class="lbl">Need Delivery</div><div class="num">38</div></div>
+            <div class="kpi"><div class="lbl">In Transit</div><div class="num">9</div></div>
+            <div class="kpi"><div class="lbl">Need Return</div><div class="num">18</div></div>
+            <div class="kpi"><div class="lbl">Dispatched</div><div class="num">27</div></div>
+          </div>
+          <div class="tbl">
+            <div class="tbl-h"><div>Load #</div><div>Container · Route</div><div>Status</div><div>Driver</div><div>LFD</div><div>Amount</div></div>
+            <div class="tbl-r"><div class="mono">DD-8421</div><div><span class="stripe" style="background:#3b82f6"></span>TCNU9876543 · LAX → Ontario</div><div><span class="b dispatched">Dispatched</span></div><div>M. Nguyen</div><div class="mono">04/25</div><div class="mono">$1,420</div></div>
+            <div class="tbl-r"><div class="mono">DD-8420</div><div><span class="stripe" style="background:#f97316"></span>MSCU1122334 · LGB → Mira Loma</div><div><span class="b transit">In Transit</span></div><div>J. Patel</div><div class="mono">04/22</div><div class="mono">$1,680</div></div>
+            <div class="tbl-r"><div class="mono">DD-8419</div><div><span class="stripe" style="background:#0ea5e9"></span>MAEU5544332 · Oakland → Stockton</div><div><span class="b avail">Available</span></div><div>— unassigned</div><div class="mono">04/30</div><div class="mono">$2,145</div></div>
+            <div class="tbl-r"><div class="mono">DD-8418</div><div><span class="stripe" style="background:#8b5cf6"></span>HLXU6677889 · BNSF Hobart → Fontana</div><div><span class="b delivered">Delivered</span></div><div>R. Diaz</div><div class="mono">04/20</div><div class="mono">$1,895</div></div>
+            <div class="tbl-r"><div class="mono">DD-8417</div><div><span class="stripe" style="background:#3b82f6"></span>CMAU3344556 · LAX → Carson</div><div><span class="b pending">Pending</span></div><div>—</div><div class="mono">04/28</div><div class="mono">$1,180</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust">
+      <div class="trust-label">Built by carriers, for carriers running drayage at the Ports of LA/LB, Oakland, NY/NJ, Savannah</div>
+      <div class="logos">
+        <span>HARBOR DRAYAGE CO.</span>
+        <span>PACIFIC RAMP</span>
+        <span>WESTPORT LOGISTICS</span>
+        <span>TRANSGULF HAULING</span>
+        <span>METRO CONTAINER</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eb">Everything, on one board</span>
+      <h2>Nine operational buckets. One view.</h2>
+      <p>Your dispatchers know what moves first. DrayageDirect slices today's work into the buckets your team already thinks in.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat"><div class="ic"><i data-lucide="ship"></i></div><h3>Arriving on vessel/rail</h3><p>Pre-arrival visibility. On-hold alerts. Released containers roll straight into Need Pickup.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="package"></i></div><h3>Need to be picked up</h3><p>Sorted by Last Free Day and pickup appointment. Miss an LFD, pay per-diem — so we make missing one hard.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="truck"></i></div><h3>Need to be delivered</h3><p>At port, in yard, on chassis. Filter by customer, driver, or terminal. Drag to reorder.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="navigation"></i></div><h3>In transit</h3><p>To yard or to customer. GPS pin-ready. Realtime updates flash on every dispatcher's screen.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="warehouse"></i></div><h3>Containers dropped</h3><p>In yard or at customer. Unloading status. When it's ready to return, it moves itself.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="arrow-down-to-line"></i></div><h3>Need to be returned</h3><p>Ready or not ready. Return by terminal. Per-diem clock visible on every row.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="states">
+  <div class="wrap">
+    <h3>17 fine-grained lifecycle states. Customize the color of every one.</h3>
+    <div class="states-row">
+      <span class="state-chip s-pending">Pending</span>
+      <span class="state-chip s-available">Available</span>
+      <span class="state-chip s-dispatched">Dispatched</span>
+      <span class="state-chip s-transit">Arrived at Port</span>
+      <span class="state-chip s-dispatched">Gate-In</span>
+      <span class="state-chip s-transit">Gate-Out</span>
+      <span class="state-chip s-transit">In Transit to Yard</span>
+      <span class="state-chip s-transit">In Transit to Customer</span>
+      <span class="state-chip s-dropped">Dropped at Yard</span>
+      <span class="state-chip s-dropped">Dropped at Customer</span>
+      <span class="state-chip s-delivered">Delivered</span>
+      <span class="state-chip s-dispatched">Empty Ready</span>
+      <span class="state-chip s-dispatched">Returning</span>
+      <span class="state-chip s-delivered">Empty Returned</span>
+      <span class="state-chip s-completed">Completed</span>
+      <span class="state-chip s-pending">On Hold</span>
+      <span class="state-chip s-cancelled">Cancelled</span>
+    </div>
+  </div>
+</div>
+
+<section class="pitch">
+  <div class="wrap pitch-grid">
+    <div>
+      <span class="eb">Realtime, across your team</span>
+      <h2>See your dispatchers' cursors. Watch rows flash when someone edits.</h2>
+      <p>DrayageDirect is built Google-Docs-style. When Maria updates a load at 10:42 am, Jake sees the row flash emerald the instant she hits save — no refresh, no stepping on each other's work.</p>
+      <ul>
+        <li><i data-lucide="check"></i> Live cursors on the dispatch board</li>
+        <li><i data-lucide="check"></i> Presence avatars — know who else is looking</li>
+        <li><i data-lucide="check"></i> Row-flash on realtime edits (1.5s ease-out)</li>
+        <li><i data-lucide="check"></i> Optimistic writes, fail-safe rollback</li>
+        <li><i data-lucide="check"></i> Compact mode for dispatchers on 2-window setups</li>
+      </ul>
+    </div>
+    <div class="pitch-vis">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-muted);font-weight:600">Today's operations</span>
+        <span style="display:flex;gap:4px"><span style="width:20px;height:20px;border-radius:50%;background:#3b82f6;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;border:2px solid #fff">MN</span><span style="width:20px;height:20px;border-radius:50%;background:#10b981;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;border:2px solid #fff;margin-left:-6px">JP</span><span style="width:20px;height:20px;border-radius:50%;background:#f59e0b;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;border:2px solid #fff;margin-left:-6px">RD</span></span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-lite b"><div class="l">Picking Up</div><div class="n">42</div></div>
+        <div class="kpi-lite g"><div class="l">Delivering</div><div class="n">38</div></div>
+        <div class="kpi-lite a"><div class="l">Returning</div><div class="n">12</div></div>
+        <div class="kpi-lite p"><div class="l">Total Active</div><div class="n">92</div></div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;font-size:12px;color:#047857;display:flex;gap:8px;align-items:center"><i data-lucide="activity" style="width:14px;height:14px;stroke-width:2;color:#059669"></i> <b>Maria</b> marked DD-8420 as In Transit · just now</div>
+    </div>
+  </div>
+</section>
+
+<section id="billing">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eb">Dispatch → Invoice, same day</span>
+      <h2>AR and AP built in. Not bolted on.</h2>
+      <p>Billing pipeline, invoicing, aging, credit memos, driver settlements, per-diem, tariffs, charge profiles. When the load delivers, the invoice is ready to send.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat"><div class="ic"><i data-lucide="file-text"></i></div><h3>Billing pipeline</h3><p>Every load's charges, auto-calculated from tariffs. Review, group, invoice. Bulk actions for common cases.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="credit-card"></i></div><h3>Driver settlements</h3><p>Pay profiles per driver. Deductions, per-diem, settlement periods. PDF export.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="trending-up"></i></div><h3>Aging + payments</h3><p>Apply payments, post credits, track aging by customer. SendGrid-powered email follow-ups.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="demo" style="background:var(--bg-soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eb">See it on your loads</span>
+      <h2>20 minutes. Your containers. Real answers.</h2>
+      <p>We don't do slide demos. Bring a week of your actual loads — we'll show you dispatch → delivery → invoice with your data on the screen.</p>
+    </div>
+    <div class="feat-grid" style="max-width:980px;margin:0 auto">
+      <div class="feat"><div class="ic"><i data-lucide="calendar-check"></i></div><h3>1. Book a call</h3><p>Pick a 30-minute slot that works. No pre-demo questionnaire.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="upload"></i></div><h3>2. Share a CSV</h3><p>Your last 7 days of loads. We'll import them into a sandbox tenant before the call.</p></div>
+      <div class="feat"><div class="ic"><i data-lucide="monitor"></i></div><h3>3. Run your day</h3><p>Dispatch a load, mark it delivered, generate the invoice. See what a real morning looks like.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:36px">
+      <a class="btn primary lg" href="#cta">Book a demo <i data-lucide="arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eb">Common questions</span>
+      <h2>Straight answers.</h2>
+    </div>
+    <div class="faq">
+      <details class="qa" open><summary>Can we keep our existing TMS during migration?</summary><p>Yes. Most carriers run DrayageDirect side-by-side with their legacy TMS for 2–4 weeks. We provide CSV import for open loads, drivers, and customers; your dispatchers ramp one desk at a time.</p></details>
+      <details class="qa"><summary>Do drivers need a separate app?</summary><p>No. Drivers access rail slips and load documents via a mobile-friendly link texted at dispatch. No app store install. The driver PDF includes all pickup, delivery, and return instructions.</p></details>
+      <details class="qa"><summary>How does realtime work under the hood?</summary><p>Supabase Realtime on Postgres change-streams. When any dispatcher updates a load, the row flashes emerald on every connected dispatcher's board within ~400ms.</p></details>
+      <details class="qa"><summary>What ports and rail ramps do you support?</summary><p>All US ports — LA/LB, Oakland, Seattle/Tacoma, NY/NJ, Norfolk, Charleston, Savannah, Houston. Rail ramps include BNSF, UP, NS, CSX. FIRMS code lookups are built in.</p></details>
+      <details class="qa"><summary>What about per-diem and chassis charges?</summary><p>Per-diem and chassis rules live in tariffs. The system auto-calculates charges from gate-in / gate-out times and generates billable line items on the invoice.</p></details>
+      <details class="qa"><summary>Is there a free trial?</summary><p>14-day trial with your real loads. No credit card. We'll help import your last month of data so you can compare side-by-side.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>See a dispatcher's day in 20 minutes.</h2>
+      <p>Bring a live load. We'll show you dispatch → delivery → invoice on your containers in real time.</p>
+      <div class="btns">
+        <a class="btn primary lg" href="#">Book a demo <i data-lucide="arrow-right"></i></a>
+        <a class="btn outline lg" href="login.html">Sign in <i data-lucide="log-in"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="ft">
+      <div class="ft-col">
+        <a class="brand" href="#"><span class="brand-d" style="font-size:28px">D</span><span class="brand-wm" style="font-size:14px"><span>Drayage</span><span>Direct</span></span></a>
+        <p>A TMS for drayage carriers. Built so your dispatch board, your AR, and your drivers share one source of truth.</p>
+      </div>
+      <div class="ft-col"><h4>Product</h4><a href="#features">Dispatcher board</a><a href="#billing">AR · AP · settlements</a><a href="#features">Driver tools</a><a href="#cta">Book a demo</a></div>
+      <div class="ft-col"><h4>Company</h4><a href="#">About</a><a href="#">Customers</a><a href="#">Security</a><a href="#">Contact</a></div>
+      <div class="ft-col"><h4>Account</h4><a href="login.html">Sign in</a><a href="#cta">Book a demo</a><a href="#">Status</a><a href="#">Changelog</a></div>
+    </div>
+    <div class="ft-bottom">
+      <span>© 2026 DrayageDirect, Inc.</span>
+      <span>SOC 2 · built on Supabase + Next.js</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  lucide.createIcons();
+  const nav=document.getElementById('nav');
+  window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>4)});
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in · DrayageDirect</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/styles.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box}body{margin:0;font-family:var(--font-sans);background:var(--bg-soft);min-height:100vh;display:flex;flex-direction:column;color:var(--fg-strong)}
+  .nav{background:#fff;border-bottom:1px solid var(--border);padding:18px 24px;display:flex;align-items:center}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:700}
+  .brand-d{font-size:28px;color:var(--dd-blue);line-height:1}
+  .brand-wm{display:flex;flex-direction:column;line-height:1.05;font-size:14px}
+  .nav a.back{margin-left:auto;font-size:13px;color:var(--fg-muted);text-decoration:none;display:flex;align-items:center;gap:4px}
+  .nav a.back svg{width:14px;height:14px;stroke-width:1.75}
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+  .card{width:100%;max-width:420px}
+  .logo-big{display:flex;justify-content:center;margin-bottom:28px}
+  .logo-big .d{font-size:44px;color:var(--dd-blue);font-weight:700;line-height:1}
+  .logo-big .w{display:flex;flex-direction:column;font-size:22px;font-weight:700;margin-left:6px;line-height:1.05}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:36px 32px;box-shadow:var(--shadow-sm)}
+  .panel h1{font-size:22px;font-weight:600;margin:0 0 4px;text-align:center}
+  .panel .sub{font-size:14px;color:var(--fg-muted);text-align:center;margin:0 0 22px}
+  label{display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#374151}
+  .req{color:#ef4444;margin-left:2px}
+  input{width:100%;padding:11px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+  input:focus{border-color:var(--dd-blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .field{margin-bottom:16px}
+  .forgot{text-align:right;font-size:13px;color:var(--dd-blue);text-decoration:none;display:block;margin-top:6px}
+  .forgot:hover{color:var(--dd-blue-700)}
+  .btn{width:100%;padding:12px 16px;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;background:var(--dd-blue);color:#fff;border:none;cursor:pointer;transition:background .15s;margin-top:6px}
+  .btn:hover{background:var(--dd-blue-700)}
+  .foot{text-align:center;margin-top:20px;font-size:13px;color:var(--fg-muted)}
+  .foot a{color:var(--dd-blue);text-decoration:none;font-weight:500}
+  .foot a:hover{color:var(--dd-blue-700)}
+  .alert{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:16px}
+  .alert.show{display:flex;gap:8px;align-items:flex-start}
+  .alert svg{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+  .kb{text-align:center;font-size:12px;color:var(--fg-subtle);margin-top:40px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="brand" href="index.html"><span class="brand-d">D</span><span class="brand-wm"><span>Drayage</span><span>Direct</span></span></a>
+  <a class="back" href="index.html"><i data-lucide="arrow-left"></i> Back to site</a>
+</nav>
+<main>
+  <div class="card">
+    <div class="logo-big"><span class="d">D</span><span class="w"><span>Drayage</span><span>Direct</span></span></div>
+    <div class="panel">
+      <h1>Welcome back</h1>
+      <p class="sub">Sign in to your carrier portal</p>
+      <div class="alert" id="alert"><i data-lucide="alert-triangle"></i><span id="alertMsg"></span></div>
+      <form id="f">
+        <div class="field"><label>Email address<span class="req">*</span></label><input type="email" id="email" placeholder="you@company.com" required autofocus></div>
+        <div class="field"><label>Password<span class="req">*</span></label><input type="password" id="pw" placeholder="Enter your password" required>
+          <a class="forgot" href="#">Forgot password?</a></div>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+      <div class="foot">New carrier? <a href="#">Talk to sales</a> to get set up.</div>
+    </div>
+    <div class="kb">Protected by SOC 2 controls · All sessions encrypted</div>
+  </div>
+</main>
+<script>
+lucide.createIcons();
+document.getElementById('f').addEventListener('submit',e=>{
+  e.preventDefault();
+  const em=document.getElementById('email').value.trim();
+  const pw=document.getElementById('pw').value;
+  const a=document.getElementById('alert'),m=document.getElementById('alertMsg');
+  if(!em||!pw){m.textContent='Enter your email and password.';a.classList.add('show');return}
+  m.textContent='Invalid email or password. 4 attempts remaining.';a.classList.add('show');
+});
+</script>
+</body>
+</html>
